@@ -45,4 +45,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * The permissions that belong to the user.
+     */
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions');
+    }
+
+    /**
+     * Check if user has a specific permission.
+     */
+    public function hasPermission($permissionSlug)
+    {
+        return $this->permissions()->where('slug', $permissionSlug)->exists();
+    }
 }

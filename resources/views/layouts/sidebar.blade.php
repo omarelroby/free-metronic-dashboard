@@ -27,14 +27,10 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link" href="">
-                                    <span class="menu-permission-icon">
-                                        <i class="ki-duotone ki-shield-tick fs-2">
-                                            <span class="path1"></span>
-                                            <span class="path2"></span>
-                                        </i>
+                                <a class="menu-link" href="{{ route('permissions.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
                                     </span>
-                                    
                                     <span class="menu-title">Permissions</span>
                                 </a>
                                 <!--end:Menu link-->
@@ -43,12 +39,9 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link" href=" ">
-                                    <span class="menu-user-icon">
-                                        <i class="ki-duotone ki-user fs-2">
-                                            <span class="path1"></span>
-                                            <span class="path2"></span>
-                                        </i>
+                                <a class="menu-link" href="{{ route('users.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
                                     </span>
                                     <span class="menu-title">Users</span>
                                 </a>
