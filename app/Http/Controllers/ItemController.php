@@ -1,0 +1,93 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Item;
+use Illuminate\Http\Request;
+
+class ItemController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $items = Item::latest()->paginate(10);
+        return view('dashboard.items.index', compact('items'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return view('dashboard.items.create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        Item::create($validated);
+
+        return redirect()->route('items.index')
+            ->with('success', 'Item created successfully.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        $item = Item::findOrFail($id);
+        return view('dashboard.items.show', compact('item'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $item = Item::findOrFail($id);
+        return view('dashboard.items.edit', compact('item'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        $item = Item::findOrFail($id);
+        $item->update($validated);
+
+        return redirect()->route('items.index')
+            ->with('success', 'Item updated successfully.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $item = Item::findOrFail($id);
+        $item->delete();
+
+        return redirect()->route('items.index')
+            ->with('success', 'Item deleted successfully.');
+    }
+}
