@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('permissions', function (Blueprint $table) {
+        Schema::create('price_settings', function (Blueprint $table) {
             $table->id();
+            $table->decimal('additional_amount', 10, 2)->default(0);
+            $table->decimal('commission', 10, 2)->default(0);
+            $table->decimal('shipping_price', 10, 2)->default(0);
             $table->timestamps();
         });
     }
@@ -22,6 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('permissions');
+        Schema::dropIfExists('price_settings');
     }
 };
+
