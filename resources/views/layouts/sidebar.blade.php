@@ -76,7 +76,7 @@
                                     <span class="path3"></span>
                                 </i>
                             </span>
-                            <span class="menu-title">User Profile</span>
+                            <span class="menu-title">Amazon</span>
                             <span class="menu-arrow"></span>
                         </span>
                         <!--end:Menu link-->
@@ -89,7 +89,7 @@
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
-                                    <span class="menu-title">Overview</span>
+                                    <span class="menu-title">Price Setting</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>
@@ -101,19 +101,7 @@
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
-                                    <span class="menu-title">Settings</span>
-                                </a>
-                                <!--end:Menu link-->
-                            </div>
-                            <!--end:Menu item-->
-                            <!--begin:Menu item-->
-                            <div class="menu-item">
-                                <!--begin:Menu link-->
-                                <a class="menu-link" href="">
-                                    <span class="menu-bullet">
-                                        <span class="bullet bullet-dot"></span>
-                                    </span>
-                                    <span class="menu-title">Account</span>
+                                    <span class="menu-title">Product List</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>

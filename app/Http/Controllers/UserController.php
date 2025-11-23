@@ -68,10 +68,16 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Request $request, string $id)
     {
         $user = User::with('permissions')->findOrFail($id);
         $permissions = Permission::all();
+        
+        // Return partial view for AJAX requests (modal)
+        if ($request->ajax()) {
+            return view('dashboard.users._edit_form', compact('user', 'permissions'));
+        }
+        
         return view('dashboard.users.edit', compact('user', 'permissions'));
     }
 

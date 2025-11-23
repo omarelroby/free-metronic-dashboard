@@ -283,7 +283,7 @@
                     <!--end::Input group-->
                     <!--begin::Actions-->
                     <div class="text-center">
-                        <button type="reset" id="kt_modal_add_user_cancel" class="btn btn-light me-3">Discard</button>
+                        {{-- <button type="reset" id="kt_modal_add_user_cancel" class="btn btn-light me-3">Discard</button> --}}
                         <button type="submit" id="kt_modal_add_user_submit" class="btn btn-primary">
                             <span class="indicator-label">Submit</span>
                             <span class="indicator-progress">Please wait...
@@ -379,57 +379,186 @@
         // Handle edit user modal
         const editModal = document.getElementById('kt_modal_edit_user');
         if (editModal) {
+            // Function to handle form submission
+            function handleEditFormSubmit(form, userId, modalBody, csrfToken, editModal) {
+                return function(e) {
+                    e.preventDefault();
+                    
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    const indicatorLabel = submitButton?.querySelector('.indicator-label');
+                    const indicatorProgress = submitButton?.querySelector('.indicator-progress');
+                    
+                    if (indicatorLabel && indicatorProgress) {
+                        indicatorLabel.style.display = 'none';
+                        indicatorProgress.style.display = 'inline-block';
+                    }
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                    }
+                    
+                    const formData = new FormData(form);
+                    formData.append('_method', 'PUT');
+                    
+                    // Ensure CSRF token is included
+                    if (csrfToken && !formData.has('_token')) {
+                        formData.append('_token', csrfToken);
+                    }
+                    
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken || ''
+                        }
+                    })
+                    .then(response => {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json().then(data => ({ ok: response.ok, data }));
+                        } else {
+                            return response.text().then(html => ({ ok: response.ok, html }));
+                        }
+                    })
+                    .then(result => {
+                        if (result.ok && result.data && result.data.success) {
+                            // Success - reload page
+                            const modal = bootstrap.Modal.getInstance(editModal);
+                            if (modal) {
+                                modal.hide();
+                            }
+                            location.reload();
+                        } else if (result.data && result.data.errors) {
+                            // JSON validation errors - display them
+                            let errorMessages = [];
+                            for (const [field, messages] of Object.entries(result.data.errors)) {
+                                errorMessages.push(...messages);
+                                // Also show field-specific errors
+                                const fieldInput = form.querySelector(`[name="${field}"]`);
+                                if (fieldInput) {
+                                    fieldInput.classList.add('is-invalid');
+                                    const errorDiv = document.createElement('div');
+                                    errorDiv.className = 'invalid-feedback d-block';
+                                    errorDiv.textContent = messages[0];
+                                    fieldInput.parentNode.appendChild(errorDiv);
+                                }
+                            }
+                            if (errorMessages.length > 0) {
+                                alert('Validation errors:\n' + errorMessages.join('\n'));
+                            }
+                        } else if (result.html) {
+                            // HTML validation errors - show them in the form
+                            const parser = new DOMParser();
+                            const errorDoc = parser.parseFromString(result.html, 'text/html');
+                            let errorForm = errorDoc.querySelector('form');
+                            
+                            // If form not found directly, try card-body
+                            if (!errorForm) {
+                                const cardBody = errorDoc.querySelector('.card-body');
+                                if (cardBody) {
+                                    errorForm = cardBody.querySelector('form');
+                                    if (errorForm) {
+                                        modalBody.innerHTML = cardBody.innerHTML;
+                                    }
+                                }
+                            } else {
+                                modalBody.innerHTML = result.html;
+                            }
+                            
+                            const updatedForm = modalBody.querySelector('form');
+                            if (updatedForm) {
+                                updatedForm.action = `/users/${userId}`;
+                                // Re-attach submit handler
+                                updatedForm.addEventListener('submit', handleEditFormSubmit(updatedForm, userId, modalBody, csrfToken, editModal));
+                            } else {
+                                alert('Error updating user. Please check the form for errors.');
+                            }
+                        } else {
+                            alert(result.data?.message || 'Error updating user. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error updating user. Please try again.');
+                    })
+                    .finally(() => {
+                        if (indicatorLabel && indicatorProgress) {
+                            indicatorLabel.style.display = 'inline-block';
+                            indicatorProgress.style.display = 'none';
+                        }
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                        }
+                    });
+                };
+            }
+            
             editModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
                 const userId = button.getAttribute('data-user-id');
                 const modalBody = document.getElementById('kt_modal_edit_user_body');
                 
+                if (!userId) {
+                    modalBody.innerHTML = '<div class="text-danger text-center py-10">User ID not found.</div>';
+                    return;
+                }
+                
                 modalBody.innerHTML = '<div class="text-center py-10"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
                 
-                fetch(`/users/${userId}/edit`)
-                    .then(response => response.text())
+                // Get CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                                 document.querySelector('input[name="_token"]')?.value;
+                
+                fetch(`/users/${userId}/edit`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.text();
+                    })
                     .then(html => {
+                        // For AJAX requests, we get the partial view directly (just the form)
+                        // For non-AJAX requests (fallback), we need to extract from card-body
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
-                        const formContent = doc.querySelector('.card-body');
-                        if (formContent) {
-                            modalBody.innerHTML = formContent.innerHTML;
-                            const form = modalBody.querySelector('form');
-                            if (form) {
-                                form.action = `/users/${userId}`;
-                                // Handle form submission
-                                form.addEventListener('submit', function(e) {
-                                    e.preventDefault();
-                                    const formData = new FormData(form);
-                                    formData.append('_method', 'PUT');
-                                    
-                                    fetch(form.action, {
-                                        method: 'POST',
-                                        body: formData,
-                                        headers: {
-                                            'X-Requested-With': 'XMLHttpRequest'
-                                        }
-                                    })
-                                    .then(response => {
-                                        if (response.ok) {
-                                            return response.json();
-                                        }
-                                        throw new Error('Network response was not ok');
-                                    })
-                                    .then(data => {
-                                        if (data.success) {
-                                            location.reload();
-                                        }
-                                    })
-                                    .catch(error => {
-                                        alert('Error updating user. Please try again.');
-                                    });
-                                });
+                        let form = doc.querySelector('form');
+                        
+                        // If form is not found directly, try to find it in card-body (for non-AJAX fallback)
+                        if (!form) {
+                            const cardBody = doc.querySelector('.card-body');
+                            if (cardBody) {
+                                form = cardBody.querySelector('form');
+                                if (form) {
+                                    modalBody.innerHTML = cardBody.innerHTML;
+                                }
                             }
+                        } else {
+                            // Direct form from partial view - insert it directly
+                            modalBody.innerHTML = html;
                         }
+                        
+                        // Get the form from the inserted HTML
+                        form = modalBody.querySelector('form');
+                        
+                        if (!form) {
+                            throw new Error('Form not found in response');
+                        }
+                        
+                        // Update form action
+                        form.action = `/users/${userId}`;
+                        
+                        // Attach submit handler
+                        form.addEventListener('submit', handleEditFormSubmit(form, userId, modalBody, csrfToken, editModal));
                     })
                     .catch(error => {
-                        modalBody.innerHTML = '<div class="text-danger text-center py-10">Error loading user data.</div>';
+                        console.error('Error loading edit form:', error);
+                        modalBody.innerHTML = '<div class="text-danger text-center py-10">Error loading user data. Please refresh the page and try again.</div>';
                     });
             });
         }
