@@ -9583,6 +9583,7 @@ License: For each use you must have a valid license purchased only from above li
 		<script src="{{asset('assets/js/custom/utilities/modals/new-target.js')}}"></script>
 		<script src="{{asset('assets/js/custom/utilities/modals/users-search.js')}}"></script>
 		<!--end::Custom Javascript-->
+		@stack('scripts')
 		<!--end::Javascript-->
 	</body>
 	<!--end::Body-->

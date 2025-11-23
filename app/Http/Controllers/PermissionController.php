@@ -37,6 +37,10 @@ class PermissionController extends Controller
 
         Permission::create($validated);
 
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Permission created successfully.']);
+        }
+
         return redirect()->route('permissions.index')
             ->with('success', 'Permission created successfully.');
     }
@@ -73,6 +77,10 @@ class PermissionController extends Controller
         ]);
 
         $permission->update($validated);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Permission updated successfully.']);
+        }
 
         return redirect()->route('permissions.index')
             ->with('success', 'Permission updated successfully.');

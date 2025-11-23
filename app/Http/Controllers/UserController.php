@@ -15,7 +15,8 @@ class UserController extends Controller
     public function index()
     {
         $users = User::with('permissions')->latest()->paginate(10);
-        return view('dashboard.users.index', compact('users'));
+        $permissions = Permission::all();
+        return view('dashboard.users.index', compact('users', 'permissions'));
     }
 
     /**
@@ -46,6 +47,10 @@ class UserController extends Controller
 
         $user = User::create($validated);
         $user->permissions()->sync($permissions);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'User created successfully.']);
+        }
 
         return redirect()->route('users.index')
             ->with('success', 'User created successfully.');
@@ -96,6 +101,10 @@ class UserController extends Controller
 
         $user->update($validated);
         $user->permissions()->sync($permissions);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'User updated successfully.']);
+        }
 
         return redirect()->route('users.index')
             ->with('success', 'User updated successfully.');
